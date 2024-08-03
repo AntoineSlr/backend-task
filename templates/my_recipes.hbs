@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Recipes</title>
+</head>
+<body>
+    {{> header}}
+    <h1>My Recipes</h1>
+
+    <ul>
+        {{#if recipes}}
+        {{#each recipes}}
+        <li>
+            <h2>{{this.title}}</h2>
+            <img src="{{this.picture}}" alt="{{this.title}}" style="width: 100px;">
+            <p><strong>Ingredients:</strong> {{this.ingredients}}</p>
+            <p><strong>Instructions:</strong> {{this.instructions}}</p>
+        </li>
+        {{/each}}
+        {{else}}
+            <h2>No recipes to display</h2>
+        {{/if}}
+    </ul>
+</body>
+</html>
