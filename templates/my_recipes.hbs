@@ -4,24 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Recipes</title>
+    <link rel="stylesheet" href="/index.css">
 </head>
 <body>
     {{> header}}
     <h1>My Recipes</h1>
 
-    <ul>
-        {{#if recipes}}
-        {{#each recipes}}
-        <li>
-            <h2>{{this.title}}</h2>
-            <img src="{{this.picture}}" alt="{{this.title}}" style="width: 100px;">
-            <p><strong>Ingredients:</strong> {{this.ingredients}}</p>
-            <p><strong>Instructions:</strong> {{this.instructions}}</p>
-        </li>
-        {{/each}}
-        {{else}}
-            <h2>No recipes to display</h2>
-        {{/if}}
-    </ul>
+        <div class="recipe-container">
+            {{#each recipes}}
+                <a href="/recipe/{{this._id}}">
+                <div class="recipe">
+                    {{#if this.image}}
+                        <img src="{{this.image}}" alt="{{this.title}}">
+                    {{else}}
+                        <img src="/placeholder.png" alt="{{this.title}}">
+                    {{/if}}
+                    <h2>{{this.title}}</h2>
+                </div>
+                </a>
+            {{/each}}
+            <a href="/add_recipe">
+            <div class="recipe">
+                <img src="/add.png" alt="add">
+                <h2>Add new recipe</h2>
+            </div>
+            </a>
+        </div>
+
 </body>
 </html>

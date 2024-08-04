@@ -3,13 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/index.css">
     <title>Document</title>
 </head>
 <body>
     {{> header}}
     <h1>Home</h1>
 
-    <a href="/my_recipes">View your own recipes</a>
+    {{#if recipes}}
+        <div class="recipe-container">
+            {{#each recipes}}
+                <a href="/recipe/{{this._id}}">
+                <div class="recipe">
+                    {{#if this.image}}
+                        <img src="{{this.image}}" alt="{{this.title}}">
+                    {{else}}
+                        <img src="/placeholder.png" alt="{{this.title}}">
+                    {{/if}}
+                    <h2>{{this.title}}</h2>
+                </div>
+                </a>            
+            {{/each}}
+        </div>
+    {{else}}
+        <h2>No recipes to display</h2>
+    {{/if}}
+
+    <a href="/my_recipes">My recipes only</a>
     
 </body>
 </html>

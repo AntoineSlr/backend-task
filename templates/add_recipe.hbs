@@ -3,20 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>New Recipe</title>
+    <link rel="stylesheet" href="/index.css">
 </head>
 <body>
     {{> header}}
     <h1>Add recipe</h1>
 
-    <h2>{{ownerId}}</h2>
-
     <form action="/add_recipe" method="post">
     
+    <h3>Title</h3>
     <input type="text" name="title", placeholder="Title">
+    <h3>Image URL</h3>
     <input type="text" name="image", placeholder="Image URL">
-    <textarea name="ingredients" placeholder="Ingredients" rows="5" required></textarea>
-    <textarea name="instructions" placeholder="Instructions" rows="5" required></textarea>
+    <h3>Ingredients</h3>
+    <textarea name="ingredients" placeholder="Ingredients" rows="8" style="width: 400px" required></textarea>
+    <h3>Instructions</h3>
+    <textarea name="instructions" placeholder="Instructions" rows="8" style="width: 400px" required></textarea>
+    <br>
     <input type="submit" value="Add Recipe">
     
     </form>

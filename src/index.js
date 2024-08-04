@@ -10,19 +10,17 @@ const templatePath = path.join(__dirname, '../templates');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, '../public')));
 
-// Session setup
 app.use(session({
-  secret: 'your_secret_key', // Replace with a strong secret key
+  secret: 'secret_key',
   resave: false,
   saveUninitialized: false
 }));
 
-// Set up view engine and templates
 app.set("view engine", "hbs");
 app.set("views", templatePath);
 
-// Middleware to check if the user is authenticated
 function checkAuthenticated(req, res, next) {
   if (req.session.userId) {
     return next();
@@ -54,10 +52,16 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Routes
-app.get("/", (req, res) => {
-  res.render("login");
+app.get(["/",'/home'], async (req, res) => {
+  try {
+    const allRecipes = await recipeCollection.find({});
+    res.render("home", { recipes: allRecipes });
+  } catch (err) {
+    console.error(err);
+    res.send("Error retrieving recipes");
+  }
 });
+
 
 app.get("/login", (req, res) => {
   res.render("login");
@@ -71,13 +75,38 @@ app.get("/add_recipe", checkAuthenticated, (req, res) => {
   res.render("add_recipe");
 });
 
+app.get("/recipe/:id", checkAuthenticated, async (req, res) => {
+  try {
+      const recipe = await recipeCollection.findById(req.params.id).populate('owner');;
+      const isOwner = recipe.owner.equals(req.session.userId);
+      if (recipe) {
+          res.render("recipe_detail", { recipe, isOwner });
+      } else {
+          res.status(404).send("Recipe not found");
+      }
+  } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get("/my_recipes", checkAuthenticated, async (req, res) => {
+  try {
+    const recipes = await recipeCollection.find({ owner: req.session.userId });
+    res.render("my_recipes", { recipes });
+  } catch (err) {
+    console.error(err);
+    res.send("Error retrieving recipes");
+  }
+});
+
 app.post("/add_recipe", checkAuthenticated, async (req, res) => {
   try {
       const newRecipe = {
           title: req.body.title,
-          picture: req.body.image,
+          image: req.body.image,
           owner: req.session.userId,
-          ingredients: req.body.ingredients.split(',').map(ingredient => ingredient.trim()), // Assuming comma-separated ingredients
+          ingredients: req.body.ingredients.split(',').map(ingredient => ingredient.trim()),
           instructions: req.body.instructions
       };
 
@@ -86,6 +115,77 @@ app.post("/add_recipe", checkAuthenticated, async (req, res) => {
   } catch (err) {
       console.error(err);
       res.send("Error adding recipe");
+  }
+});
+
+app.post("/delete_recipe/:id", checkAuthenticated, async (req, res) => {
+  try {
+      const recipeId = req.params.id;
+      const recipe = await recipeCollection.findById(recipeId);
+
+      if (!recipe) {
+          return res.status(404).send("Recipe not found");
+      }
+
+      if (!recipe.owner.equals(req.session.userId)) {
+          return res.status(403).send("You do not have permission to delete this recipe");
+      }
+
+      await recipeCollection.findByIdAndDelete(recipeId);
+
+      res.redirect("/my_recipes");
+  } catch (err) {
+      console.error(err);
+      res.status(500).send("Error deleting recipe");
+  }
+});
+
+app.get("/edit/:id", checkAuthenticated, async (req, res) => {
+  try {
+      const recipeId = req.params.id;
+      const recipe = await recipeCollection.findById(recipeId);
+
+      if (!recipe) {
+          return res.status(404).send("Recipe not found");
+      }
+
+      if (!recipe.owner.equals(req.session.userId)) {
+          return res.status(403).send("You do not have permission to edit this recipe");
+      }
+
+      res.render("edit_recipe", { recipe });
+  } catch (err) {
+      console.error(err);
+      res.status(500).send("Error retrieving recipe details");
+  }
+});
+
+app.post("/edit/:id", checkAuthenticated, async (req, res) => {
+  try {
+      const recipeId = req.params.id;
+      const { title, image, ingredients, instructions } = req.body;
+
+      const recipe = await recipeCollection.findById(recipeId);
+
+      if (!recipe) {
+          return res.status(404).send("Recipe not found");
+      }
+
+      if (!recipe.owner.equals(req.session.userId)) {
+          return res.status(403).send("You do not have permission to edit this recipe");
+      }
+
+      recipe.title = title;
+      recipe.image = image;
+      recipe.ingredients = ingredients.split(',');
+      recipe.instructions = instructions;
+
+      await recipe.save();
+
+      res.redirect(`/recipe/${recipeId}`);
+  } catch (err) {
+      console.error(err);
+      res.status(500).send("Error updating recipe");
   }
 });
 
@@ -100,8 +200,8 @@ app.post("/signup", async (req, res) => {
     };
 
     const newUser = await loginCollection.create(data);
-    req.session.userId = newUser._id; // Store user ID in session
-    res.render("home");
+    req.session.userId = newUser._id;
+    res.redirect('/home');
   } catch (err) {
     console.error(err);
     res.send("Error during signup");
@@ -115,8 +215,8 @@ app.post("/login", async (req, res) => {
     if (user) {
       const validPassword = await bcrypt.compare(req.body.password, user.password);
       if (validPassword) {
-        req.session.userId = user._id; // Store user ID in session
-        res.render("home");
+        req.session.userId = user._id;
+        res.redirect('/home');
       } else {
         res.send("Invalid password");
       }
@@ -136,17 +236,6 @@ app.get('/logout', (req, res) => {
     }
     res.redirect('/login');
   });
-});
-
-// Protected route
-app.get("/my_recipes", checkAuthenticated, async (req, res) => {
-  try {
-    const recipes = await recipeCollection.find({ owner: req.session.userId });
-    res.render("my_recipes", { recipes });
-  } catch (err) {
-    console.error(err);
-    res.send("Error retrieving recipes");
-  }
 });
 
 app.listen(3000, () => {

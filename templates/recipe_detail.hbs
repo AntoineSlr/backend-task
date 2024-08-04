@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{recipe.title}}</title>
+    <link rel="stylesheet" href="/index.css">
+    <script>
+        function confirmDelete() {
+            return confirm("Are you sure you want to delete this recipe?");
+        }
+    </script>
+</head>
+<body>
+    {{> header}}
+    <h1>{{recipe.title}}</h1>
+
+    <p>Author: {{#if isOwner}} You {{else}}{{recipe.owner.name}}{{/if}}</p>
+    {{#if recipe.image}}
+    <img src="{{recipe.image}}" alt="{{this.title}}" style="height: 400px;">
+    {{else}}
+    <img src="/placeholder.png" alt="{{this.title}}" style="height: 400px;">
+    {{/if}}
+    <h2>Ingredients:</h2>
+    <ul>
+        {{#each recipe.ingredients}}
+        <li>{{this}}</li>
+        {{/each}}
+    </ul>
+    <h2>Instructions:</h2>
+    <p>{{recipe.instructions}}</p>
+
+    {{#if isOwner}}
+    <div class="actions">
+        <form action="/delete_recipe/{{recipe._id}}" method="post" onsubmit="return confirmDelete()"><button>Delete Recipe</button></form>
+        <a href="/edit/{{recipe._id}}"><button>Edit Recipe</button></a>
+    </div>
+    {{/if}}
+
+</body>
+</html>
