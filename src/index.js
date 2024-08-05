@@ -62,7 +62,6 @@ app.get(["/",'/home'], async (req, res) => {
   }
 });
 
-
 app.get("/login", (req, res) => {
   res.render("login");
 });
@@ -97,6 +96,26 @@ app.get("/my_recipes", checkAuthenticated, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.send("Error retrieving recipes");
+  }
+});
+
+app.get("/edit/:id", checkAuthenticated, async (req, res) => {
+  try {
+      const recipeId = req.params.id;
+      const recipe = await recipeCollection.findById(recipeId);
+
+      if (!recipe) {
+          return res.status(404).send("Recipe not found");
+      }
+
+      if (!recipe.owner.equals(req.session.userId)) {
+          return res.status(403).send("You do not have permission to edit this recipe");
+      }
+
+      res.render("edit_recipe", { recipe });
+  } catch (err) {
+      console.error(err);
+      res.status(500).send("Error retrieving recipe details");
   }
 });
 
@@ -137,26 +156,6 @@ app.post("/delete_recipe/:id", checkAuthenticated, async (req, res) => {
   } catch (err) {
       console.error(err);
       res.status(500).send("Error deleting recipe");
-  }
-});
-
-app.get("/edit/:id", checkAuthenticated, async (req, res) => {
-  try {
-      const recipeId = req.params.id;
-      const recipe = await recipeCollection.findById(recipeId);
-
-      if (!recipe) {
-          return res.status(404).send("Recipe not found");
-      }
-
-      if (!recipe.owner.equals(req.session.userId)) {
-          return res.status(403).send("You do not have permission to edit this recipe");
-      }
-
-      res.render("edit_recipe", { recipe });
-  } catch (err) {
-      console.error(err);
-      res.status(500).send("Error retrieving recipe details");
   }
 });
 
